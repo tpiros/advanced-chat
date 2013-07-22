@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    var socket = io.connect("192.168.56.101:8000");
+    var socket = io.connect("host:8000");
     var myRoomID = null;
     $("#chat").hide();
     $("#createRoomForm").hide();
