@@ -1,5 +1,5 @@
 var io = require("socket.io");
-var socket = io.listen(8000, "192.168.56.101");
+var socket = io.listen(8000, "host");
 var Room = require('./room.js');
 var uuid = require('node-uuid');
 
