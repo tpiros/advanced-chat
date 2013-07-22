@@ -1,5 +1,5 @@
-A more advanced chat application. Make sure to update server.js with the right host or IP & port for socket.io as well as client.js to listen on the right port/IP/host.
-Also, update index.html to point to the right .css and .js files. (Bootstrap and jQuery).
+A more advanced chat application. Make sure to update both <code>server.js</code> and <code>index.js</code> with the right host or IP & port for socket.io as well as client.js to listen on the right port/IP/host.
+Also, update <code>index.html</code> to point to the right .css and .js files. (Bootstrap and jQuery).
 
 Once all this is done run <code>node server.js</code> to start the server up and <code>node index.js</code> to start up the express web server.
 
