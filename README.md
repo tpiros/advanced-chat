@@ -15,6 +15,10 @@ with the right IP address/hostname.
 
 To install <code>npm install && bower install</code> and to launch run <code>npm start</code>.
 
+== Added whisper feature ==
+
+To use, in the chat input box, type <pre>w:USER:Message</pre>.
+
 New up to date post: http://tamaspiros.co.uk/2013/10/26/chat-2-0-supercharged-chat-written-in-node-js-and-socket-io/
 
 Previous articles related to this topic:
