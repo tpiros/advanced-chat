@@ -13,10 +13,10 @@ Please also update <strong>public/js/client.js</strong>:
 
 with the right IP address/hostname.
 
+To install <code>npm install && bower install</code> and to launch run <code>npm start</code>.
 
-New up to date post: <coming>
+New up to date post: http://tamaspiros.co.uk/2013/10/26/chat-2-0-supercharged-chat-written-in-node-js-and-socket-io/
 
-A follow up to http://tamaspiros.co.uk/2013/05/19/simple-chat-application-using-node-js-and-socket-io/
-
-More info:
-http://tamaspiros.co.uk/2013/07/15/advanced-chat-using-node-js-and-socket-io-episode-1/
+Previous articles related to this topic:
+-http://tamaspiros.co.uk/2013/05/19/simple-chat-application-using-node-js-and-socket-io/
+-http://tamaspiros.co.uk/2013/07/15/advanced-chat-using-node-js-and-socket-io-episode-1/
