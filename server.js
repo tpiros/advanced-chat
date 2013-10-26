@@ -1,12 +1,33 @@
-var io = require("socket.io");
-var socket = io.listen(8000, "host");
-var Room = require('./room.js');
+var express = require('express');
+var app = module.exports = express();
+var server = require('http').createServer(app)
+var io = require("socket.io").listen(server);
+//var socket = io.listen(server);
 var uuid = require('node-uuid');
 
-socket.set("log level", 1);
+app.configure(function() {
+	app.locals.pretty = true;
+	  app.use(express.bodyParser());
+	  app.use(express.methodOverride());
+	  app.use(express.static(__dirname + '/public'));
+	  app.use('/components', express.static(__dirname + '/components'));
+	  app.use('/js', express.static(__dirname + '/js'));
+	  app.set('views', __dirname + '/views');
+	  app.engine('html', require('ejs').renderFile);
+});
+
+app.get('/', function(req, res) {
+  res.render('index.html');
+});
+
+server.listen(3000, "192.168.56.101",  function(){
+  console.log("Express server up and running.");
+});
+
+io.set("log level", 1);
 var people = {};
 var rooms = {};
-var clients = [];
+var sockets = [];
 
 Array.prototype.contains = function(k, callback) {
     var self = this;
@@ -21,6 +42,14 @@ Array.prototype.contains = function(k, callback) {
     }(0));
 };
 
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
 function isEmpty(obj) {
     for(var prop in obj) {
         if(obj.hasOwnProperty(prop))
@@ -29,154 +58,217 @@ function isEmpty(obj) {
     return true;
 }
 
-socket.on("connection", function (client) {
+io.sockets.on("connection", function (socket) {
 
-	client.on("joinserver", function(name) {
+	socket.on("joinserver", function(name) {
 		ownerRoomID = inRoomID = null;
-		people[client.id] = {"name" : name, "owns" : ownerRoomID, "inroom": inRoomID};
-		client.emit("update", "You have connected to the server.");
-		socket.sockets.emit("update", people[client.id].name + " is online.")
-		socket.sockets.emit("update-people", people);
-		client.emit("roomList", {rooms: rooms});
-		clients.push(client);
+		people[socket.id] = {"name" : name, "owns" : ownerRoomID, "inroom": inRoomID};
+		socket.emit("update", "You have connected to the server.");
+		io.sockets.emit("update", people[socket.id].name + " is online.")
+		sizePeople = Object.size(people);
+		sizeRooms = Object.size(rooms);
+		io.sockets.emit("update-people", {people: people, count: sizePeople});
+		socket.emit("roomList", {rooms: rooms, count: sizeRooms});
+		sockets.push(socket);
 	});
 
-	client.on("send", function(msg) {
-		if (socket.sockets.manager.roomClients[client.id]['/'+client.room] !== undefined ) {
-			socket.sockets.in(client.room).emit("chat", people[client.id], msg);
-	    	} else {
-			client.emit("update", "Please connect to a room.");
-	    }
-	});
-
-	client.on("disconnect", function() {
-		if (people[client.id]) {
-			if (people[client.id].inroom === null) {
-				socket.sockets.emit("update", people[client.id].name + " has left the server.");
-				delete people[client.id];
-				socket.sockets.emit("update-people", people);
+	socket.on("send", function(msg) {
+		var re = /^[w]:.*:/;
+		var whisper = re.test(msg);
+		var whisperStr = msg.split(":");
+		var found = false;
+		if (whisper) {
+			var whisperTo = whisperStr[1];
+			var keys = Object.keys(people);
+			if (keys.length != 0) {
+				for (var i = 0; i<keys.length; i++) {
+					if (people[keys[i]].name === whisperTo) {
+						console.log("matched person");
+						var whisperId = keys[i];
+						found = true;
+						if (socket.id === whisperId) { //can't whisper to ourselves
+							socket.emit("update", "You can't whisper to yourself.");
+						}
+						break;
+					} 
+				}
+			}
+			if (found && socket.id !== whisperId) {
+				var whisperTo = whisperStr[1];
+				var whisperMsg = whisperStr[2];
+				socket.emit("whisper", {name: "You"}, whisperMsg);
+				io.sockets.socket(whisperId).emit("whisper", people[socket.id], whisperMsg);
 			} else {
-				if (people[client.id].owns !== null) {
-					var room= rooms[people[client.id].owns];
-					if (client.id === room.owner) {
+				socket.emit("update", "Can't find " + whisperTo);
+			}
+		} else {
+			if (io.sockets.manager.roomClients[socket.id]['/'+socket.room] !== undefined ) {
+				io.sockets.in(socket.room).emit("chat", people[socket.id], msg);
+		    	} else {
+				socket.emit("update", "Please connect to a room.");
+		    	}
+		}
+	});
+
+	socket.on("disconnect", function() {
+		if (people[socket.id]) {
+			if (people[socket.id].inroom === null) {
+				//io.sockets.emit("update", people[socket.id].name + " has left the server.");
+				delete people[socket.id];
+				sizePeople = Object.size(people);
+				io.sockets.emit("update-people", {people: people, count: sizePeople});
+			} else {
+				if (people[socket.id].owns !== null) {
+					var room= rooms[people[socket.id].owns];
+					if (socket.id === room.owner) {
+						io.sockets.in(socket.room).emit("update", "The owner (" +people[socket.id].name + ") has left the server. The room is removed and you have been disconnected from it as well.");
 						var i = 0;
-						while(i < clients.length) {
-							if (clients[i].id === room.people[i]) {
-								people[clients[i].id].inroom = null;
-								clients[i].leave(room.name);
+						while(i < sockets.length) {
+							if (sockets[i].id === room.people[i]) {
+								people[sockets[i].id].inroom = null;
+								sockets[i].leave(room.name);
 							}
 					    		++i;
 						}
-						delete rooms[people[client.id].owns];
+						delete rooms[people[socket.id].owns];
 					}
 				}
-				socket.sockets.emit("update", people[client.id].name + " has left the server.");
-				delete people[client.id];
-				socket.sockets.emit("update-people", people);
-				socket.sockets.emit("roomList", {rooms: rooms});
+				io.sockets.emit("update", people[socket.id].name + " has left the server.");
+				delete people[socket.id];
+				sizePeople = Object.size(people);
+				sizeRooms = Object.size(rooms);
+				io.sockets.emit("update-people", {people: people, count: sizePeople});
+				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			}
 		}
 	});
 
 	//Room functions
-	client.on("createRoom", function(name) {
-		if (people[client.id].owns === null) {
+	socket.on("createRoom", function(name) {
+		if (people[socket.id].owns === null) {
 			var id = uuid.v4();
-			var room = new Room(name, id, client.id);
+			var room = new Room(name, id, socket.id);
 			rooms[id] = room;
-			socket.sockets.emit("roomList", {rooms: rooms});
+			sizeRooms = Object.size(rooms);
+			io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			//add room to socket, and auto join the creator of the room
-			client.room = name;
-			client.join(client.room);
-			people[client.id].owns = id;
-			people[client.id].inroom = id;
-			room.addPerson(client.id);
-			client.emit("update", "Welcome to " + room.name + ".");
-			client.emit("sendRoomID", {id: id});
+			socket.room = name;
+			socket.join(socket.room);
+			people[socket.id].owns = id;
+			people[socket.id].inroom = id;
+			room.addPerson(socket.id);
+			socket.emit("update", "Welcome to " + room.name + ".");
+			socket.emit("sendRoomID", {id: id});
 		} else {
-			socket.sockets.emit("update", "You have already created a room.");
+			io.sockets.emit("update", "You have already created a room.");
 		}
 	});
 
-	client.on("removeRoom", function(id) {
+	socket.on("check", function(name, fn) {
+		var keys = Object.keys(rooms);
+		var match = false;
+		if (keys.length != 0) {
+			for (var i = 0; i<keys.length; i++) {
+				console.log(rooms[keys[i]].name);
+				console.log()
+				if (rooms[keys[i]].name === name) {
+					console.log("matched room: " + name);
+					console.log()
+					match = true;
+					break;
+				} 
+			}
+		}
+		console.log("match: "   + match)
+		fn({result: match});
+	});
+
+	socket.on("removeRoom", function(id) {
 		var room = rooms[id];
+		console.log(socket.room);
 		if (room) {
-			if (client.id === room.owner) { //only the owner can remove the room
+			if (socket.id === room.owner) { //only the owner can remove the room
 				var personCount = room.people.length;
 				if (personCount > 2) {
-					console.log('there are still people in the room warning');
+					console.log('There are still people in the room warning');
 				}  else {
-					if (client.id === room.owner) {
-						socket.sockets.in(client.room).emit("update", "The owner (" +people[client.id].name + ") removed the room.");
+					if (socket.id === room.owner) {
+						io.sockets.in(socket.room).emit("update", "The owner (" +people[socket.id].name + ") removed the room. and you have also been removed from it.");
 						var i = 0;
-						while(i < clients.length) {
-							if(clients[i].id === room.people[i]) {
-								people[clients[i].id].inroom = null;
-								clients[i].leave(room.name);
+						while(i < sockets.length) {
+							if(sockets[i].id === room.people[i]) {
+								people[sockets[i].id].inroom = null;
+								sockets[i].leave(room.name);
 							}
 						    ++i;
 						}
 			    			delete rooms[id];
 			    			people[room.owner].owns = null;
-						socket.sockets.emit("roomList", {rooms: rooms});
+			    			sizeRooms = Object.size(rooms);
+						io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 					}
 				}
 			} else {
-				client.emit("update", "Only the owner can remove a room.");
+				socket.emit("update", "Only the owner can remove a room.");
 			}
 		}
 	});
 
-	client.on("joinRoom", function(id) {
-		var room = rooms[id];
-		if (client.id === room.owner) {
-			client.emit("update", "You are the owner of this room and you have already been joined.");
+	socket.on("joinRoom", function(id) {
+		if (typeof people[socket.id] !== "undefined") {
+			var room = rooms[id];
+			if (socket.id === room.owner) {
+				socket.emit("update", "You are the owner of this room and you have already been joined.");
+			} else {
+				room.people.contains(socket.id, function(found) {
+				    if (found) {
+				        socket.emit("update", "You have already joined this room.");
+				    } else {
+				    	if (people[socket.id].inroom !== null) {
+				    		socket.emit("update", "You are already in a room ("+rooms[people[socket.id].inroom].name+"), please leave it first to join another room.");
+				    	} else {
+						room.addPerson(socket.id);
+						people[socket.id].inroom = id;
+						socket.room = room.name;
+						socket.join(socket.room);
+						user = people[socket.id];
+						io.sockets.in(socket.room).emit("update", user.name + " has connected to " + room.name + " room.");
+						socket.emit("update", "Welcome to " + room.name + ".");
+						socket.emit("sendRoomID", {id: id});
+					}
+				    }
+				});
+			}
 		} else {
-			room.people.contains(client.id, function(found) {
-			    if (found) {
-			        client.emit("update", "You have already joined this room.");
-			    } else {
-			    	if (people[client.id].inroom !== null) {
-			    		client.emit("update", "You are already in a room ("+rooms[people[client.id].inroom].name+"), please leave it first to join another room.");
-			    	} else {
-					room.addPerson(client.id);
-					people[client.id].inroom = id;
-					client.room = room.name;
-					client.join(client.room);
-					user = people[client.id];
-					socket.sockets.in(client.room).emit("update", user.name + " has connected to " + room.name + " room.");
-					client.emit("update", "Welcome to " + room.name + ".");
-					client.emit("sendRoomID", {id: id});
-				}
-			    }
-			});
+			socket.emit("update", "Please enter a valid name first.");
 		}
 	});
 
-	client.on("leaveRoom", function(id) {
+	socket.on("leaveRoom", function(id) {
 		var room = rooms[id];
 		if (room) {
-			if (client.id === room.owner) {
+			if (socket.id === room.owner) {
+				io.sockets.in(socket.room).emit("update", "The owner (" +people[socket.id].name + ") is leaving the room. The room is removed and you have been disconnected from it as well.");
 				var i = 0;
-				while(i < clients.length) {
-					if(clients[i].id === room.people[i]) {
-						people[clients[i].id].inroom = null;
-						clients[i].leave(room.name);
+				while(i < sockets.length) {
+					if(sockets[i].id === room.people[i]) {
+						people[sockets[i].id].inroom = null;
+						sockets[i].leave(room.name);
 					}
 				    ++i;
 				}
 	    			delete rooms[id];
 	    			people[room.owner].owns = null;
-				socket.sockets.emit("roomList", {rooms: rooms});
-				socket.sockets.in(client.room).emit("update", "The owner (" +people[client.id].name + ") is leaving the room. The room is removed.");
+	    			sizeRooms = Object.size(rooms);
+				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			} else {
-				//make sure that the client is in fact part of this room
-				room.people.contains(client.id, function(found) {
+				//make sure that the socket is in fact part of this room
+				room.people.contains(socket.id, function(found) {
 				    if (found) {
-				       var personIndex = room.people.indexOf(client.id);
+				       var personIndex = room.people.indexOf(socket.id);
 					room.people.splice(personIndex, 1);
-					socket.sockets.emit("update", people[client.id].name + " has left the room.");
-					client.leave(room.name);
+					io.sockets.emit("update", people[socket.id].name + " has left the room.");
+					socket.leave(room.name);
 				    }
 				 });
 			}

@@ -1,0 +1,20 @@
+{
+  "name": "chat-20",
+  "description": "",
+  "version": "0.0.1",
+  "author": {
+    "name": "Tamas Piros",
+    "email": "tamas@tamaspiros.co.uk",
+    "web": "http://tamaspiros.co.uk"
+  },
+  "scripts": {
+    "start": "NODE_PATH=./app/controllers NODE_ENV=development ./node_modules/.bin/nodemon server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "node-uuid": "latest",
+    "socket.io": "latest",
+    "nodemon": "latest",
+    "ejs": "latest"
+  }
+}

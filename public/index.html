@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Chat 2.0</title>
+  <link rel="stylesheet" type="text/css" href="components/bootstrap/dist/css/bootstrap.css">
+  <style>
+    .conversation {
+      font-size: 18px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-4">
+      <!-- names & rooms-->
+      <ul id="rooms" class="list-group"></ul>
+      <p id="createRoom"><button id="showCreateRoom" class="btn btn-warning btn-lg">Create room</button></p>
+      <form class="form-inline" id="createRoomForm"><input type="text" class="form-control input-lg"  placeholder="Room name" id="createRoomName"><button id="createRoomBtn" class="btn btn-success btn-lg">Create room</button></form>
+      <ul id="people" class="list-group"></ul>
+    </div>
+    <div class="col-md-8">
+      <!-- the main chat screen -->
+      <div class="alert alert-danger" id="errors"></div>
+      <div id="login">
+        <form class="form-inline">
+          <div class="form-group">
+            <input type="text" class="form-control input-lg" placeholder="Your name" id="name">
+          </div>
+          <input type="button" name="join" id="join" value="Join" class="btn btn-primary btn-lg">
+        </form>
+      </div>
+
+      <div id="chat">
+        <form id="2" class="form-inline">
+          <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
+          <input type="button" name="send" id="send" value="Send" class="btn btn-success btn-lg">
+          <input type="button" name="leave" id="leave" value="Leave Room" class="btn btn-warning btn-lg">
+        </form>
+      </div>
+       <div class="conversation">
+        <ul id="msgs" class="list-unstyled"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="components/jquery/jquery.js"></script>
+<script src="components/bootstrap/dist/js/bootstrap.js"></script>
+<script src="/socket.io/socket.io.js"></script>  
+<script src="js/client.js"></script>
+</body>
+</html>
