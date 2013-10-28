@@ -17,10 +17,12 @@ To install <code>npm install && bower install</code> and to launch run <code>npm
 
 == Added whisper feature ==
 
-To use, in the chat input box, type <pre>w:USER:Message</pre>.
+To use, in the chat input box, type <code>w:USER:Message</code>
 
 New up to date post: http://tamaspiros.co.uk/2013/10/26/chat-2-0-supercharged-chat-written-in-node-js-and-socket-io/
 
 Previous articles related to this topic:
--http://tamaspiros.co.uk/2013/05/19/simple-chat-application-using-node-js-and-socket-io/
--http://tamaspiros.co.uk/2013/07/15/advanced-chat-using-node-js-and-socket-io-episode-1/
+<ul>
+<li>http://tamaspiros.co.uk/2013/05/19/simple-chat-application-using-node-js-and-socket-io/</li>
+<li>http://tamaspiros.co.uk/2013/07/15/advanced-chat-using-node-js-and-socket-io-episode-1/</li>
+</ul>
