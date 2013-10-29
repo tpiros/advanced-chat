@@ -268,6 +268,7 @@ io.sockets.on("connection", function (socket) {
 				    if (found) {
 				       var personIndex = room.people.indexOf(socket.id);
 					room.people.splice(personIndex, 1);
+					people[socket.id].inroom = null;
 					io.sockets.emit("update", people[socket.id].name + " has left the room.");
 					socket.leave(room.name);
 				    }
