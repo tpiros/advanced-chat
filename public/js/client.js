@@ -30,6 +30,25 @@ $(document).ready(function() {
       }
     });
 
+
+
+  $("#name").typeahead({
+    name: 'example',
+    local: [
+        'Salt Lake City',
+        'Provo',
+        'Ogden',
+        'Bountiful',
+        'Orem',
+        'Centerville',
+        'St. George',
+        'Cedar City',
+        'Hurricane', ]
+}).each(function() {
+   if ($(this).hasClass('input-lg'))
+        $(this).prev('.tt-hint').addClass('hint-lg');
+});
+
     $("#name").keypress(function(e){
       var name = $("#name").val();
       if(name.length < 3) {
