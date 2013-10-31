@@ -30,25 +30,6 @@ $(document).ready(function() {
       }
     });
 
-
-
-  $("#name").typeahead({
-    name: 'example',
-    local: [
-        'Salt Lake City',
-        'Provo',
-        'Ogden',
-        'Bountiful',
-        'Orem',
-        'Centerville',
-        'St. George',
-        'Cedar City',
-        'Hurricane', ]
-}).each(function() {
-   if ($(this).hasClass('input-lg'))
-        $(this).prev('.tt-hint').addClass('hint-lg');
-});
-
     $("#name").keypress(function(e){
       var name = $("#name").val();
       if(name.length < 3) {
@@ -127,10 +108,18 @@ $(document).ready(function() {
     });
 
     socket.on("update-people", function(data){
+      var peopleOnline = [];
       $("#people").empty();
       $('#people').append("<li class=\"list-group-item active\">People online <span class=\"badge\">"+data.count+"</span></li>");
       $.each(data.people, function(clienid, obj) {
         $('#people').append("<li class=\"list-group-item\">" + obj.name + "</li>");
+        peopleOnline.push(obj.name);
+      });
+       $("#msg").typeahead({
+          local: peopleOnline
+      }).each(function() {
+         if ($(this).hasClass('input-lg'))
+              $(this).prev('.tt-hint').addClass('hint-lg');
       });
     });
 
