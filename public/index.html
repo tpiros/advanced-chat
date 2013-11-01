@@ -36,7 +36,11 @@
 
       <div id="chat">
         <form id="2" class="form-inline">
-          <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
+          <div class="input-group">
+            <span class="input-group-addon">Whisper? <input type="checkbox" id="whisper"></span>
+            <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
+          </div>
+          
           <input type="button" name="send" id="send" value="Send" class="btn btn-success btn-lg">
           <input type="button" name="leave" id="leave" value="Leave Room" class="btn btn-warning btn-lg">
         </form>

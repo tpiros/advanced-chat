@@ -56,10 +56,11 @@ $(document).ready(function() {
     });
 
     $("#msg").keypress(function(e) {
-      if(e.which == 13) {
+      if(e.which === 13) {
         var msg = $("#msg").val();
         socket.emit("send", msg);
         $("#msg").val("");
+        $("#msg").attr("placeholder", "Your message");
       }
     });
 
@@ -102,6 +103,53 @@ $(document).ready(function() {
       $("#createRoom").show();
     });
 
+    $("#whisper").change(function() {
+      var peopleOnline = [];
+      if ($("#whisper").prop('checked')) {
+        console.log("checked, going to get the peeps");
+        //peopleOnline = ["Tamas", "Steve", "George"];
+        socket.emit("getOnlinePeople", function(data) {
+          $.each(data.people, function(clientid, obj) {
+            console.log(obj.name);
+            peopleOnline.push(obj.name);
+          });
+          console.log("adding typeahead")
+          $("#msg").typeahead({
+              local: peopleOnline
+            }).each(function() {
+              if ($(this).hasClass('input-lg'))
+                $(this).prev('.tt-hint').addClass('hint-lg');
+          });
+        });
+        console.log(peopleOnline);
+        
+      }
+    });
+      
+      
+
+    // $( "#whisper" ).change(function() {
+    //   var peopleOnline = [];
+    //   console.log($("#whisper").prop('checked'));
+    //   if ($("#whisper").prop('checked')) {
+    //     console.log("checked, going to get the peeps");
+    //     peopleOnline = ["Tamas", "Steve", "George"];
+    //     // socket.emit("getOnlinePeople", function(data) {
+    //     //   $.each(data.people, function(clientid, obj) {
+    //     //     console.log(obj.name);
+    //     //     peopleOnline.push(obj.name);
+    //     //   });
+    //     // });
+    //     //console.log(peopleOnline);
+    //   }
+    //   $("#msg").typeahead({
+    //         local: peopleOnline
+    //       }).each(function() {
+    //         if ($(this).hasClass('input-lg'))
+    //           $(this).prev('.tt-hint').addClass('hint-lg');
+    //       });
+    // });
+
 //socket-y stuff
     socket.on("update", function(msg) {
       $("#msgs").append("<li>" + msg + "</li>");
@@ -111,16 +159,20 @@ $(document).ready(function() {
       var peopleOnline = [];
       $("#people").empty();
       $('#people').append("<li class=\"list-group-item active\">People online <span class=\"badge\">"+data.count+"</span></li>");
-      $.each(data.people, function(clienid, obj) {
+      $.each(data.people, function(a, obj) {
         $('#people').append("<li class=\"list-group-item\">" + obj.name + "</li>");
         peopleOnline.push(obj.name);
       });
-       $("#msg").typeahead({
-          local: peopleOnline
-      }).each(function() {
-         if ($(this).hasClass('input-lg'))
-              $(this).prev('.tt-hint').addClass('hint-lg');
-      });
+
+      var whisper = $("#whisper").prop('checked');
+      if (whisper) {
+        $("#msg").typeahead({
+            local: peopleOnline
+        }).each(function() {
+           if ($(this).hasClass('input-lg'))
+                $(this).prev('.tt-hint').addClass('hint-lg');
+        });
+      }
     });
 
     socket.on("chat", function(person, msg) {
@@ -156,7 +208,4 @@ $(document).ready(function() {
       $("#msg").attr("disabled", "disabled");
       $("#send").attr("disabled", "disabled");
     });
-
-
-
   });

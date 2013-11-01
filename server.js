@@ -144,6 +144,12 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 
+	socket.on("getOnlinePeople", function(fn) {
+		console.log("getting online people");
+		console.log(people);
+		fn({people: people});
+	});
+
 	//Room functions
 	socket.on("createRoom", function(name) {
 		if (people[socket.id].owns === null) {
