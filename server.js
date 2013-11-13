@@ -84,7 +84,6 @@ io.sockets.on("connection", function (socket) {
 			if (keys.length != 0) {
 				for (var i = 0; i<keys.length; i++) {
 					if (people[keys[i]].name === whisperTo) {
-						console.log("matched person");
 						var whisperId = keys[i];
 						found = true;
 						if (socket.id === whisperId) { //can't whisper to ourselves
@@ -112,7 +111,7 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-		if (people[socket.id]) {
+		if (typeof people[socket.id] !== "undefined") {
 			if (people[socket.id].inroom === null) {
 				//io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
@@ -142,6 +141,8 @@ io.sockets.on("connection", function (socket) {
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			}
 		}
+		p = sockets.indexOf(socket.id);
+		sockets.splice(p, 1);
 	});
 
 	//Room functions
@@ -170,23 +171,17 @@ io.sockets.on("connection", function (socket) {
 		var match = false;
 		if (keys.length != 0) {
 			for (var i = 0; i<keys.length; i++) {
-				console.log(rooms[keys[i]].name);
-				console.log()
 				if (rooms[keys[i]].name === name) {
-					console.log("matched room: " + name);
-					console.log()
 					match = true;
 					break;
 				} 
 			}
 		}
-		console.log("match: "   + match)
 		fn({result: match});
 	});
 
 	socket.on("removeRoom", function(id) {
 		var room = rooms[id];
-		console.log(socket.room);
 		if (room) {
 			if (socket.id === room.owner) { //only the owner can remove the room
 				var personCount = room.people.length;
