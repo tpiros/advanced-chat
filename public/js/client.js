@@ -122,7 +122,9 @@ $(document).ready(function() {
           });
         });
         console.log(peopleOnline);
-        
+      } else {
+        console.log('remove typeahead');
+        $('#msg').typeahead('destroy');
       }
     });
       
