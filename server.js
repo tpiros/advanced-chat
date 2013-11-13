@@ -112,7 +112,7 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-		if (people[socket.id]) {
+		if (typeof people[socket.id] !== "undefined") {
 			if (people[socket.id].inroom === null) {
 				//io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
@@ -141,6 +141,8 @@ io.sockets.on("connection", function (socket) {
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			}
+			p = sockets.indexOf(socket.id);
+			sockets.splice(p, 1);
 		}
 	});
 
