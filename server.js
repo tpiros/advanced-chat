@@ -2,6 +2,7 @@ var express = require('express');
 var app = module.exports = express();
 var server = require('http').createServer(app)
 var io = require("socket.io").listen(server);
+//var socket = io.listen(server);
 var uuid = require('node-uuid');
 var Room = require('./room.js');
 var _ = require('underscore')._;
@@ -73,6 +74,11 @@ io.sockets.on("connection", function (socket) {
 		sockets.push(socket);
 	});
 
+	socket.on("getOnlinePeople", function(fn) {
+                console.log("getting online people");
+                fn({people: people});
+        });
+
 	socket.on("send", function(msg) {
 		var re = /^[w]:.*:/;
 		var whisper = re.test(msg);
@@ -111,7 +117,8 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-
+		//console.log(people);
+		//console.log(rooms);
 		if (typeof people[socket.id] !== "undefined") { //this handles the refresh of the name screen
 			if (people[socket.id].inroom === null) { //person disconnecting is not in a room, can safely remove
 				io.sockets.emit("update", people[socket.id].name + " has left the server.");
@@ -165,8 +172,6 @@ io.sockets.on("connection", function (socket) {
 			console.log();
 			console.log(rooms);
 		}
-		p = sockets.indexOf(socket.id);
-		sockets.splice(p, 1);
 	});
 
 	//Room functions
