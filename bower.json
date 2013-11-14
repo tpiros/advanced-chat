@@ -3,7 +3,8 @@
     "version": "0.0.1",
     "dependencies": {
         "bootstrap": "latest",
-        "jquery": "latest"
+        "jquery": "latest",
+        "typeahead.js": "latest"
     },
     "directory": "components"
 }
