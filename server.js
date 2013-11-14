@@ -5,6 +5,7 @@ var io = require("socket.io").listen(server);
 //var socket = io.listen(server);
 var uuid = require('node-uuid');
 var Room = require('./room.js');
+var _ = require('underscore')._;
 
 app.configure(function() {
 	app.locals.pretty = true;
@@ -84,7 +85,6 @@ io.sockets.on("connection", function (socket) {
 			if (keys.length != 0) {
 				for (var i = 0; i<keys.length; i++) {
 					if (people[keys[i]].name === whisperTo) {
-						console.log("matched person");
 						var whisperId = keys[i];
 						found = true;
 						if (socket.id === whisperId) { //can't whisper to ourselves
@@ -112,44 +112,61 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-		if (typeof people[socket.id] !== "undefined") {
-			if (people[socket.id].inroom === null) {
-				//io.sockets.emit("update", people[socket.id].name + " has left the server.");
+		//console.log(people);
+		//console.log(rooms);
+		if (typeof people[socket.id] !== "undefined") { //this handles the refresh of the name screen
+			if (people[socket.id].inroom === null) { //person disconnecting is not in a room, can safely remove
+				io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
 				sizePeople = Object.size(people);
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
-			} else {
-				if (people[socket.id].owns !== null) {
-					var room= rooms[people[socket.id].owns];
-					if (socket.id === room.owner) {
+			} else { //person is in a room
+				var room = rooms[people[socket.id].inroom];
+				if (people[socket.id].owns !== null) { //person owns a room
+					//var room = rooms[people[socket.id].owns];
+					if (socket.id === room.owner) { // if person leaving matches the room owner
 						io.sockets.in(socket.room).emit("update", "The owner (" +people[socket.id].name + ") has left the server. The room is removed and you have been disconnected from it as well.");
-						var i = 0;
+						delete rooms[people[socket.id].owns]; //deleting the room.
+						io.sockets.emit("update", people[socket.id].name + " has left the server.");
+						//remove everyone from the room.
+						delete rooms[people[socket.id].owns];
+						var i= 0;
 						while(i < sockets.length) {
-							if (sockets[i].id === room.people[i]) {
+							if (_.contains(room.people), socket.id) {
 								people[sockets[i].id].inroom = null;
 								sockets[i].leave(room.name);
+								console.log(room.people);
+								room.people = _.without(room.people, socket.id)
 							}
-					    		++i;
+						++i;
 						}
-						delete rooms[people[socket.id].owns];
 					}
+					room.people = _.without(room.people, socket.id)
 				}
-				io.sockets.emit("update", people[socket.id].name + " has left the server.");
+				//remove person from room list
+				room.people = _.without(room.people, socket.id)
+				if (room.owner !== socket.id)
+					io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
 				sizePeople = Object.size(people);
 				sizeRooms = Object.size(rooms);
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			}
-			p = sockets.indexOf(socket.id);
-			sockets.splice(p, 1);
+			//remove sockets
+			var o = _.findWhere(sockets, {'id': socket.id});
+			//console.log("~~~ slicing this out")
+			//console.log("socket size before: "+ sockets.length)
+			//console.log("~~~")
+			sockets = _.without(sockets, o);
+			//console.log("socket size after: "+ sockets.length)
+			//var personIndex = room.people.indexOf(socket.id)
+			//console.log(personIndex);
+			//room.people.splice(personIndex, 1);
+			console.log(people);
+			console.log();
+			console.log(rooms);
 		}
-	});
-
-	socket.on("getOnlinePeople", function(fn) {
-		console.log("getting online people");
-		console.log(people);
-		fn({people: people});
 	});
 
 	//Room functions
@@ -178,23 +195,17 @@ io.sockets.on("connection", function (socket) {
 		var match = false;
 		if (keys.length != 0) {
 			for (var i = 0; i<keys.length; i++) {
-				console.log(rooms[keys[i]].name);
-				console.log()
 				if (rooms[keys[i]].name === name) {
-					console.log("matched room: " + name);
-					console.log()
 					match = true;
 					break;
 				} 
 			}
 		}
-		console.log("match: "   + match)
 		fn({result: match});
 	});
 
 	socket.on("removeRoom", function(id) {
 		var room = rooms[id];
-		console.log(socket.room);
 		if (room) {
 			if (socket.id === room.owner) { //only the owner can remove the room
 				var personCount = room.people.length;
