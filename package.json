@@ -15,6 +15,7 @@
     "node-uuid": "latest",
     "socket.io": "latest",
     "nodemon": "latest",
+    "underscore": "latest",
     "ejs": "latest"
   }
 }

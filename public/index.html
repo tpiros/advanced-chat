@@ -3,6 +3,7 @@
 <head>
   <title>Chat 2.0</title>
   <link rel="stylesheet" type="text/css" href="components/bootstrap/dist/css/bootstrap.css">
+  <link rel="stylesheet" href="components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css">
   <style>
     .conversation {
       font-size: 18px;
@@ -35,7 +36,11 @@
 
       <div id="chat">
         <form id="2" class="form-inline">
-          <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
+          <div class="input-group">
+            <span class="input-group-addon">Whisper? <input type="checkbox" id="whisper"></span>
+            <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
+          </div>
+          
           <input type="button" name="send" id="send" value="Send" class="btn btn-success btn-lg">
           <input type="button" name="leave" id="leave" value="Leave Room" class="btn btn-warning btn-lg">
         </form>
@@ -48,6 +53,7 @@
 </div>
 <script src="components/jquery/jquery.js"></script>
 <script src="components/bootstrap/dist/js/bootstrap.js"></script>
+<script src="components/typeahead.js/dist/typeahead.js"></script>
 <script src="/socket.io/socket.io.js"></script>  
 <script src="js/client.js"></script>
 </body>
