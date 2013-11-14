@@ -111,17 +111,10 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-<<<<<<< HEAD
-		if (typeof people[socket.id] !== "undefined") {
-			if (people[socket.id].inroom === null) {
-				//io.sockets.emit("update", people[socket.id].name + " has left the server.");
-=======
-		//console.log(people);
-		//console.log(rooms);
+
 		if (typeof people[socket.id] !== "undefined") { //this handles the refresh of the name screen
 			if (people[socket.id].inroom === null) { //person disconnecting is not in a room, can safely remove
 				io.sockets.emit("update", people[socket.id].name + " has left the server.");
->>>>>>> devel
 				delete people[socket.id];
 				sizePeople = Object.size(people);
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
