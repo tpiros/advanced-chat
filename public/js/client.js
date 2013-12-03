@@ -1,3 +1,57 @@
+//WebSpeech API
+var final_transcript = '';
+var recognizing = false;
+
+if (!('webkitSpeechRecognition' in window)) {
+  console.log("webkitSpeechRecognition is not available");
+} else {
+  console.log("webkitSpeechRecognition is available");
+  var recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = function() {
+    recognizing = true;
+  };
+
+  recognition.onresult = function(event) {
+    console.log(event);
+    var interim_transcript = '';
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        final_transcript += event.results[i][0].transcript;
+        $('#msg').addClass("final");
+        $('#msg').removeClass("interim");
+      } else {
+        interim_transcript += event.results[i][0].transcript;
+        $("#msg").val(interim_transcript);
+        $('#msg').addClass("interim");
+        $('#msg').removeClass("final");
+      }
+    }
+    $("#msg").val(final_transcript);
+    };
+  }
+
+  function startButton(event) {
+    if (recognizing) {
+      console.log("stopping");
+      recognition.stop();
+      recognizing = false;
+      $("#start_button").prop("value", "Record");
+      return;
+    }
+    final_transcript = '';
+    recognition.lang = "en-GB"
+    recognition.start();
+    $("#start_button").prop("value", "Recording ... Click to stop.");
+    ignore_onend = false;
+    $("#msg").val();
+    start_timestamp = event.timeStamp;
+  }
+//end of WebSpeech
+
+
 $(document).ready(function() {
     var socket = io.connect("192.168.56.101:3000");
     var myRoomID = null;
@@ -51,7 +105,8 @@ $(document).ready(function() {
 
     $("#send").click(function() {
       var msg = $("#msg").val();
-      socket.emit("send", msg);
+      if (msg != "")
+        socket.emit("send", msg);
       $("#msg").val("");
     });
 
@@ -121,6 +176,7 @@ $(document).ready(function() {
                 $(this).prev('.tt-hint').addClass('hint-lg');
           });
         });
+        
         console.log(peopleOnline);
       } else {
         console.log('remove typeahead');

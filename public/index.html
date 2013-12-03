@@ -3,11 +3,17 @@
 <head>
   <title>Chat 2.0</title>
   <link rel="stylesheet" type="text/css" href="components/bootstrap/dist/css/bootstrap.css">
-  <link rel="stylesheet" href="components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css">
   <style>
     .conversation {
       font-size: 18px;
       margin: 10px;
+    }
+    .final {
+      font-color: #000;
+    }
+    .interim {
+      font-color: #f00;
     }
   </style>
 </head>
@@ -40,8 +46,8 @@
             <span class="input-group-addon">Whisper? <input type="checkbox" id="whisper"></span>
             <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
           </div>
-          
           <input type="button" name="send" id="send" value="Send" class="btn btn-success btn-lg">
+          <input type="button" name="start_button" id="start_button" value="Record" onclick="startButton(event)" class="btn btn-info btn-lg">
           <input type="button" name="leave" id="leave" value="Leave Room" class="btn btn-warning btn-lg">
         </form>
       </div>
