@@ -45,9 +45,7 @@ if (!('webkitSpeechRecognition' in window)) {
     recognition.lang = "en-GB"
     recognition.start();
     $("#start_button").prop("value", "Recording ... Click to stop.");
-    ignore_onend = false;
     $("#msg").val();
-    start_timestamp = event.timeStamp;
   }
 //end of WebSpeech
 
