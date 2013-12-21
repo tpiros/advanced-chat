@@ -20,6 +20,7 @@
   <li>Whisper messages are private messages sent between two users</li>
   <li>With a WebSpeech enabled browsers, users can record their messages</li>
   <li>Users can leave a room and/or disconnect from the server anytime</li>
+</ul>
 
 ## Setup and configuration
 
