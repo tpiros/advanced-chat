@@ -266,7 +266,7 @@ io.sockets.on("connection", function (socket) {
 	    			sizeRooms = _.size(rooms);
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			} else {
-				if (_.contains((room.people), socket.io)) {
+				if (_.contains((room.people), socket.id)) {
 					var personIndex = room.people.indexOf(socket.id);
 					room.people.splice(personIndex, 1);
 					people[socket.id].inroom = null;
