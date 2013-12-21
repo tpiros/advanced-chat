@@ -4,7 +4,10 @@
     "dependencies": {
         "bootstrap": "latest",
         "jquery": "latest",
-        "typeahead.js": "latest"
+        "typeahead.js": "latest",
+        "angular": "latest",
+        "typeahead.js-bootstrap.css": "latest",
+        "font-awesome": "latest"
     },
     "directory": "components"
 }

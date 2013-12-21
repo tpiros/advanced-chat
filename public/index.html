@@ -4,63 +4,79 @@
   <title>Chat 2.0</title>
   <link rel="stylesheet" type="text/css" href="components/bootstrap/dist/css/bootstrap.css">
   <link rel="stylesheet" type="text/css" href="components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css">
-  <style>
-    .conversation {
-      font-size: 18px;
-      margin: 10px;
-    }
-    .final {
-      font-color: #000;
-    }
-    .interim {
-      font-color: #f00;
-    }
-  </style>
+  <link rel="stylesheet" href="components/font-awesome/css/font-awesome.css">
+  <link rel="stylesheet" href="css/flags.css">
+  <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-
-<div class="container">
-  <div class="row">
-    <div class="col-md-4">
-      <!-- names & rooms-->
-      <ul id="rooms" class="list-group"></ul>
-      <p id="createRoom"><button id="showCreateRoom" class="btn btn-warning btn-lg">Create room</button></p>
-      <form class="form-inline" id="createRoomForm"><input type="text" class="form-control input-lg"  placeholder="Room name" id="createRoomName"><button id="createRoomBtn" class="btn btn-success btn-lg">Create room</button></form>
-      <ul id="people" class="list-group"></ul>
-    </div>
-    <div class="col-md-8">
-      <!-- the main chat screen -->
-      <div class="alert alert-danger" id="errors"></div>
-      <div id="login">
-        <form class="form-inline">
+  <div class="main col-md-6 col-md-offset-3">
+    <div class="alert alert-danger" id="errors"></div>
+    <div id="login-screen">
+      <p class="lead">Chat application - using node.js and socket.io</p>
+      <p>Please enter your name below and click 'Join' or hit the 'Enter' key.</p>
+        <form class="form-inline" id="nameForm">
           <div class="form-group">
             <input type="text" class="form-control input-lg" placeholder="Your name" id="name">
           </div>
-          <input type="button" name="join" id="join" value="Join" class="btn btn-primary btn-lg">
+          <input type="submit" name="join" id="join" value="Join" class="btn btn-primary btn-lg">
         </form>
       </div>
+    </div>
 
-      <div id="chat">
-        <form id="2" class="form-inline">
-          <div class="input-group">
-            <span class="input-group-addon">Whisper? <input type="checkbox" id="whisper"></span>
+    <div class="row" id="main-chat-screen">
+      <div class="col-md-4">
+        <ul id="rooms" class="list-group"></ul>
+        <ul id="people" class="list-group"></ul>
+      </div>
+      <div class="col-md-6">
+        <div id="conversation">
+          <ul id="msgs" class="list-unstyled"></ul>
+        </div>
+        <form id="chatForm" class="form-inline">
+          <div class="form-group">
             <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
           </div>
-          <input type="button" name="send" id="send" value="Send" class="btn btn-success btn-lg">
+          <input type="submit" name="send" id="send" value="Send" class="btn btn-success btn-lg">
           <input type="button" name="start_button" id="start_button" value="Record" onclick="startButton(event)" class="btn btn-info btn-lg">
-          <input type="button" name="leave" id="leave" value="Leave Room" class="btn btn-warning btn-lg">
+          <div class="btn-group">
+            <button type="button" class="btn btn-lg btn-info dropdown-toggle" data-toggle="dropdown" >
+              Actions <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#" name="createRoom" data-toggle="modal" data-target="#roomModal">Create room</a></li>
+              <li><a href="#" name="leave" id="leave">Leave current room</a></li>
+              <!--<li><a href="#" name="disconnect" id="disconnect">Disconnect from chat</a></li>-->
+            </ul>
+          </div>
         </form>
-      </div>
-       <div class="conversation">
-        <ul id="msgs" class="list-unstyled"></ul>
       </div>
     </div>
   </div>
-</div>
-<script src="components/jquery/jquery.js"></script>
-<script src="components/bootstrap/dist/js/bootstrap.js"></script>
-<script src="components/typeahead.js/dist/typeahead.js"></script>
-<script src="/socket.io/socket.io.js"></script>  
+
+  <!-- Modal start -->
+  <div class="modal fade" id="roomModal" tabindex="-1" role="dialog" aria-labelledby="createRoomLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="createRoomLabel">Create room</h4>
+        </div>
+        <div class="modal-body">
+          You can create a chat room here. Names have to be unique.
+          <form class="form-inline" id="createRoomForm"><input type="text" class="form-control input-lg"  placeholder="Room name" id="createRoomName"></form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-lg btn-default" data-dismiss="modal">Close</button>
+          <button data-dismiss="modal" id="createRoomBtn" class="btn btn-success btn-lg">Create room</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal end -->
+  <script src="components/jquery/jquery.js"></script>
+  <script src="components/bootstrap/dist/js/bootstrap.js"></script>
+  <script src="components/typeahead.js/dist/typeahead.js"></script>
+  <script src="/socket.io/socket.io.js"></script>  
 <script src="js/client.js"></script>
 </body>
 </html>

@@ -2,7 +2,6 @@ var express = require('express');
 var app = module.exports = express();
 var server = require('http').createServer(app)
 var io = require("socket.io").listen(server);
-//var socket = io.listen(server);
 var uuid = require('node-uuid');
 var Room = require('./room.js');
 var _ = require('underscore')._;
@@ -14,6 +13,7 @@ app.configure(function() {
 	  app.use(express.static(__dirname + '/public'));
 	  app.use('/components', express.static(__dirname + '/components'));
 	  app.use('/js', express.static(__dirname + '/js'));
+	  app.use('/icons', express.static(__dirname + '/icons'));
 	  app.set('views', __dirname + '/views');
 	  app.engine('html', require('ejs').renderFile);
 });
@@ -22,7 +22,7 @@ app.get('/', function(req, res) {
   res.render('index.html');
 });
 
-server.listen(3000, "192.168.56.101",  function(){
+server.listen(3000, "192.168.56.102",  function(){
   console.log("Express server up and running.");
 });
 
@@ -31,53 +31,47 @@ var people = {};
 var rooms = {};
 var sockets = [];
 
-Array.prototype.contains = function(k, callback) {
-    var self = this;
-    return (function check(i) {
-        if (i >= self.length) {
-            return callback(false);
-        }
-        if (self[i] === k) {
-            return callback(true);
-        }
-        return process.nextTick(check.bind(null, i+1));
-    }(0));
-};
-
-Object.size = function(obj) {
-    var size = 0, key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) size++;
-    }
-    return size;
-};
-
-function isEmpty(obj) {
-    for(var prop in obj) {
-        if(obj.hasOwnProperty(prop))
-            return false;
-    }
-    return true;
-}
-
 io.sockets.on("connection", function (socket) {
 
-	socket.on("joinserver", function(name) {
-		ownerRoomID = inRoomID = null;
-		people[socket.id] = {"name" : name, "owns" : ownerRoomID, "inroom": inRoomID};
-		socket.emit("update", "You have connected to the server.");
-		io.sockets.emit("update", people[socket.id].name + " is online.")
-		sizePeople = Object.size(people);
-		sizeRooms = Object.size(rooms);
-		io.sockets.emit("update-people", {people: people, count: sizePeople});
-		socket.emit("roomList", {rooms: rooms, count: sizeRooms});
-		sockets.push(socket);
+	socket.on("joinserver", function(name, device) {
+		var exists = false;
+		var ownerRoomID = inRoomID = null;
+		_.find(people, function(key,value) {
+			if (key.name === name)
+				return exists = true;
+		});
+		if (exists) {//provide unique username:
+			var randomNumber=Math.floor(Math.random()*1001)
+			do {
+				proposedName = name+randomNumber;
+				_.find(people, function(key,value) {
+					if (key.name === proposedName)
+						return exists = true;
+				});
+			} while (!exists);
+			socket.emit("exists", {msg: "The username already exists, please pick another one.", proposedName: proposedName});
+		} else {
+			people[socket.id] = {"name" : name, "owns" : ownerRoomID, "inroom": inRoomID, "device": device};
+			socket.emit("update", "You have connected to the server.");
+			io.sockets.emit("update", people[socket.id].name + " is online.")
+			sizePeople = _.size(people);
+			sizeRooms = _.size(rooms);
+			io.sockets.emit("update-people", {people: people, count: sizePeople});
+			socket.emit("roomList", {rooms: rooms, count: sizeRooms});
+			socket.emit("joined"); //extra emit for GeoLocation
+			sockets.push(socket);
+		}
 	});
 
 	socket.on("getOnlinePeople", function(fn) {
-                console.log("getting online people");
                 fn({people: people});
         });
+
+	socket.on("countryUpdate", function(data) { //we know which country the user is from
+		country = data.country.toLowerCase();
+		people[socket.id].country = country;
+		io.sockets.emit("update-people", {people: people, count: sizePeople});
+	});
 
 	socket.on("send", function(msg) {
 		var re = /^[w]:.*:/;
@@ -117,13 +111,11 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function() {
-		//console.log(people);
-		//console.log(rooms);
 		if (typeof people[socket.id] !== "undefined") { //this handles the refresh of the name screen
 			if (people[socket.id].inroom === null) { //person disconnecting is not in a room, can safely remove
 				io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
-				sizePeople = Object.size(people);
+				sizePeople = _.size(people);
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
 			} else { //person is in a room
 				var room = rooms[people[socket.id].inroom];
@@ -137,10 +129,9 @@ io.sockets.on("connection", function (socket) {
 						delete rooms[people[socket.id].owns];
 						var i= 0;
 						while(i < sockets.length) {
-							if (_.contains(room.people), socket.id) {
+							if (_.contains((room.people)), socket.id) {
 								people[sockets[i].id].inroom = null;
 								sockets[i].leave(room.name);
-								console.log(room.people);
 								room.people = _.without(room.people, socket.id)
 							}
 						++i;
@@ -153,24 +144,16 @@ io.sockets.on("connection", function (socket) {
 				if (room.owner !== socket.id)
 					io.sockets.emit("update", people[socket.id].name + " has left the server.");
 				delete people[socket.id];
-				sizePeople = Object.size(people);
-				sizeRooms = Object.size(rooms);
+				sizePeople = _.size(people);
+				sizeRooms = _.size(rooms);
 				io.sockets.emit("update-people", {people: people, count: sizePeople});
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			}
 			//remove sockets
 			var o = _.findWhere(sockets, {'id': socket.id});
-			//console.log("~~~ slicing this out")
-			//console.log("socket size before: "+ sockets.length)
-			//console.log("~~~")
 			sockets = _.without(sockets, o);
-			//console.log("socket size after: "+ sockets.length)
-			//var personIndex = room.people.indexOf(socket.id)
-			//console.log(personIndex);
-			//room.people.splice(personIndex, 1);
-			console.log(people);
-			console.log();
-			console.log(rooms);
+		} else {
+			delete people[socket.id];
 		}
 	});
 
@@ -180,8 +163,9 @@ io.sockets.on("connection", function (socket) {
 			var id = uuid.v4();
 			var room = new Room(name, id, socket.id);
 			rooms[id] = room;
-			sizeRooms = Object.size(rooms);
+			sizeRooms = _.size(rooms);
 			io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
+			//socket.emit("roomList", {rooms: rooms, count: sizeRooms});
 			//add room to socket, and auto join the creator of the room
 			socket.room = name;
 			socket.join(socket.room);
@@ -196,16 +180,11 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("check", function(name, fn) {
-		var keys = Object.keys(rooms);
 		var match = false;
-		if (keys.length != 0) {
-			for (var i = 0; i<keys.length; i++) {
-				if (rooms[keys[i]].name === name) {
-					match = true;
-					break;
-				} 
-			}
-		}
+		_.find(rooms, function(key,value) {
+			if (key.name === name)
+				return match = true;
+		});
 		fn({result: match});
 	});
 
@@ -229,7 +208,7 @@ io.sockets.on("connection", function (socket) {
 						}
 			    			delete rooms[id];
 			    			people[room.owner].owns = null;
-			    			sizeRooms = Object.size(rooms);
+			    			sizeRooms = _.size(rooms);
 						io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 					}
 				}
@@ -245,11 +224,10 @@ io.sockets.on("connection", function (socket) {
 			if (socket.id === room.owner) {
 				socket.emit("update", "You are the owner of this room and you have already been joined.");
 			} else {
-				room.people.contains(socket.id, function(found) {
-				    if (found) {
-				        socket.emit("update", "You have already joined this room.");
-				    } else {
-				    	if (people[socket.id].inroom !== null) {
+				if (_.contains((room.people), socket.id)) {
+					socket.emit("update", "You have already joined this room.");
+				} else {
+					if (people[socket.id].inroom !== null) {
 				    		socket.emit("update", "You are already in a room ("+rooms[people[socket.id].inroom].name+"), please leave it first to join another room.");
 				    	} else {
 						room.addPerson(socket.id);
@@ -257,12 +235,13 @@ io.sockets.on("connection", function (socket) {
 						socket.room = room.name;
 						socket.join(socket.room);
 						user = people[socket.id];
+						if (room.owner !== socket.id)
+							room.remove = false;
 						io.sockets.in(socket.room).emit("update", user.name + " has connected to " + room.name + " room.");
 						socket.emit("update", "Welcome to " + room.name + ".");
 						socket.emit("sendRoomID", {id: id});
 					}
-				    }
-				});
+				}
 			}
 		} else {
 			socket.emit("update", "Please enter a valid name first.");
@@ -284,19 +263,16 @@ io.sockets.on("connection", function (socket) {
 				}
 	    			delete rooms[id];
 	    			people[room.owner].owns = null;
-	    			sizeRooms = Object.size(rooms);
+	    			sizeRooms = _.size(rooms);
 				io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
 			} else {
-				//make sure that the socket is in fact part of this room
-				room.people.contains(socket.id, function(found) {
-				    if (found) {
-				       var personIndex = room.people.indexOf(socket.id);
+				if (_.contains((room.people), socket.io)) {
+					var personIndex = room.people.indexOf(socket.id);
 					room.people.splice(personIndex, 1);
 					people[socket.id].inroom = null;
 					io.sockets.emit("update", people[socket.id].name + " has left the room.");
 					socket.leave(room.name);
-				    }
-				 });
+				}
 			}
 		}
 	});
