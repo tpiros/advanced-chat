@@ -6,6 +6,7 @@
 //WebSpeech API
 var final_transcript = '';
 var recognizing = false;
+var last10messages = []; //to be populated later
 
 if (!('webkitSpeechRecognition' in window)) {
   console.log("webkitSpeechRecognition is not available");
@@ -71,6 +72,12 @@ $(document).ready(function() {
     event.preventDefault();
   });
 
+  $("#conversation").bind("DOMSubtreeModified",function() {
+    $("#conversation").animate({
+        scrollTop: $("#conversation")[0].scrollHeight
+      });
+  });
+
   $("#main-chat-screen").hide();
   $("#errors").hide();
   $("#name").focus();
@@ -117,10 +124,63 @@ $(document).ready(function() {
       socket.emit("send", msg);
       $("#msg").val("");
     }
-    $("#conversation").animate({
-        scrollTop:$("#conversation")[0].scrollHeight
-      }, 1000);
   });
+
+  //'is typing' message
+  var typing = false;
+  var timeout = undefined;
+
+  function timeoutFunction() {
+    typing = false;
+    socket.emit("typing", false);
+  }
+
+  $("#msg").keypress(function(e){
+    if (e.which !== 13) {
+      if (typing === false && myRoomID !== null && $("#msg").is(":focus")) {
+        typing = true;
+        socket.emit("typing", true);
+      } else {
+        clearTimeout(timeout);
+        timeout = setTimeout(timeoutFunction, 5000);
+      }
+    }
+  });
+
+  socket.on("isTyping", function(data) {
+    if (data.isTyping) {
+      if ($("#"+data.person+"").length === 0) {
+        $("#updates").append("<li id='"+ data.person +"'><span class='text-muted'><small><i class='fa fa-keyboard-o'></i>" + data.person + " is typing.</small></li>");
+        timeout = setTimeout(timeoutFunction, 5000);
+      }
+    } else {
+      $("#"+data.person+"").remove();
+    }
+  });
+
+
+/*
+  $("#msg").keypress(function(){
+    if ($("#msg").is(":focus")) {
+      if (myRoomID !== null) {
+        socket.emit("isTyping");
+      }
+    } else {
+      $("#keyboard").remove();
+    }
+  });
+
+  socket.on("isTyping", function(data) {
+    if (data.typing) {
+      if ($("#keyboard").length === 0)
+        $("#updates").append("<li id='keyboard'><span class='text-muted'><i class='fa fa-keyboard-o'></i>" + data.person + " is typing.</li>");
+    } else {
+      socket.emit("clearMessage");
+      $("#keyboard").remove();
+    }
+    console.log(data);
+  });
+*/
 
   $("#showCreateRoom").click(function() {
     $("#createRoomForm").toggle();
@@ -253,6 +313,17 @@ socket.on("joined", function() {
   }
 });
 
+socket.on("history", function(data) {
+  if (data.length !== 0) {
+    $("#msgs").append("<li><strong><span class='text-warning'>Last 10 messages:</li>");
+    $.each(data, function(data, msg) {
+      $("#msgs").append("<li><span class='text-warning'>" + msg + "</span></li>");
+    });
+  } else {
+    $("#msgs").append("<li><strong><span class='text-warning'>No past messages in this room.</li>");
+  }
+});
+
   socket.on("update", function(msg) {
     $("#msgs").append("<li>" + msg + "</li>");
   });
@@ -261,7 +332,6 @@ socket.on("joined", function() {
     //var peopleOnline = [];
     $("#people").empty();
     $('#people').append("<li class=\"list-group-item active\">People online <span class=\"badge\">"+data.count+"</span></li>");
-    //console.log(data);
     $.each(data.people, function(a, obj) {
       if (!("country" in obj)) {
         html = "";
@@ -284,8 +354,13 @@ socket.on("joined", function() {
   });
 
   socket.on("chat", function(person, msg) {
-    $("#msgs").append("<li><strong><span class='text-success'>" + person.id + "</span></strong>: " + msg + "</li>");
+    $("#msgs").append("<li><strong><span class='text-success'>" + person.name + "</span></strong>: " + msg + "</li>");
+    //clear typing field
+     $("#"+person.name+"").remove();
+     clearTimeout(timeout);
+     timeout = setTimeout(timeoutFunction, 0);
   });
+
   socket.on("whisper", function(person, msg) {
     if (person.name === "You") {
       s = "whisper"

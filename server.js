@@ -30,6 +30,7 @@ io.set("log level", 1);
 var people = {};
 var rooms = {};
 var sockets = [];
+var last10messages = [];
 
 io.sockets.on("connection", function (socket) {
 
@@ -73,6 +74,11 @@ io.sockets.on("connection", function (socket) {
 		io.sockets.emit("update-people", {people: people, count: sizePeople});
 	});
 
+	socket.on("typing", function(data) {
+		if (typeof people[socket.id] !== "undefined")
+			io.sockets.in(socket.room).emit("isTyping", {isTyping: data, person: people[socket.id].name});
+	});
+	
 	socket.on("send", function(msg) {
 		var re = /^[w]:.*:/;
 		var whisper = re.test(msg);
@@ -104,6 +110,12 @@ io.sockets.on("connection", function (socket) {
 		} else {
 			if (io.sockets.manager.roomClients[socket.id]['/'+socket.room] !== undefined ) {
 				io.sockets.in(socket.room).emit("chat", people[socket.id], msg);
+				socket.emit("isTyping", false);
+				if (_.size(last10messages[socket.room]) > 10) {
+					last10messages[socket.room].splice(0,1);
+				} else {
+					last10messages[socket.room].push(people[socket.id].name + ": " + msg);
+				}
 		    	} else {
 				socket.emit("update", "Please connect to a room.");
 		    	}
@@ -127,6 +139,8 @@ io.sockets.on("connection", function (socket) {
 						io.sockets.emit("update", people[socket.id].name + " has left the server.");
 						//remove everyone from the room.
 						delete rooms[people[socket.id].owns];
+						//and also remove the chat history
+						delete last10messages[room.name];
 						var i= 0;
 						while(i < sockets.length) {
 							if (_.contains((room.people)), socket.id) {
@@ -165,7 +179,6 @@ io.sockets.on("connection", function (socket) {
 			rooms[id] = room;
 			sizeRooms = _.size(rooms);
 			io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
-			//socket.emit("roomList", {rooms: rooms, count: sizeRooms});
 			//add room to socket, and auto join the creator of the room
 			socket.room = name;
 			socket.join(socket.room);
@@ -174,6 +187,7 @@ io.sockets.on("connection", function (socket) {
 			room.addPerson(socket.id);
 			socket.emit("update", "Welcome to " + room.name + ".");
 			socket.emit("sendRoomID", {id: id});
+			last10messages[socket.room] = [];
 		} else {
 			io.sockets.emit("update", "You have already created a room.");
 		}
@@ -207,6 +221,7 @@ io.sockets.on("connection", function (socket) {
 						    ++i;
 						}
 			    			delete rooms[id];
+			    			delete last10messages[room.name];
 			    			people[room.owner].owns = null;
 			    			sizeRooms = _.size(rooms);
 						io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
@@ -235,11 +250,13 @@ io.sockets.on("connection", function (socket) {
 						socket.room = room.name;
 						socket.join(socket.room);
 						user = people[socket.id];
-						if (room.owner !== socket.id)
-							room.remove = false;
 						io.sockets.in(socket.room).emit("update", user.name + " has connected to " + room.name + " room.");
 						socket.emit("update", "Welcome to " + room.name + ".");
 						socket.emit("sendRoomID", {id: id});
+						var keys = _.keys(last10messages);
+						if (_.contains(keys, socket.room)) {
+							socket.emit("history", last10messages[socket.room]);
+						}
 					}
 				}
 			}
