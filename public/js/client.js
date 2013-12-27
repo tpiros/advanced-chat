@@ -150,7 +150,7 @@ $(document).ready(function() {
   socket.on("isTyping", function(data) {
     if (data.isTyping) {
       if ($("#"+data.person+"").length === 0) {
-        $("#updates").append("<li id='"+ data.person +"'><span class='text-muted'><small><i class='fa fa-keyboard-o'></i>" + data.person + " is typing.</small></li>");
+        $("#updates").append("<li id='"+ data.person +"'><span class='text-muted'><small><i class='fa fa-keyboard-o'></i> " + data.person + " is typing.</small></li>");
         timeout = setTimeout(timeoutFunction, 5000);
       }
     } else {

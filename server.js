@@ -30,7 +30,7 @@ io.set("log level", 1);
 var people = {};
 var rooms = {};
 var sockets = [];
-var last10messages = [];
+var chatHistory = {};
 
 io.sockets.on("connection", function (socket) {
 
@@ -111,10 +111,10 @@ io.sockets.on("connection", function (socket) {
 			if (io.sockets.manager.roomClients[socket.id]['/'+socket.room] !== undefined ) {
 				io.sockets.in(socket.room).emit("chat", people[socket.id], msg);
 				socket.emit("isTyping", false);
-				if (_.size(last10messages[socket.room]) > 10) {
-					last10messages[socket.room].splice(0,1);
+				if (_.size(chatHistory[socket.room]) > 10) {
+					chatHistory[socket.room].splice(0,1);
 				} else {
-					last10messages[socket.room].push(people[socket.id].name + ": " + msg);
+					chatHistory[socket.room].push(people[socket.id].name + ": " + msg);
 				}
 		    	} else {
 				socket.emit("update", "Please connect to a room.");
@@ -140,7 +140,7 @@ io.sockets.on("connection", function (socket) {
 						//remove everyone from the room.
 						delete rooms[people[socket.id].owns];
 						//and also remove the chat history
-						delete last10messages[room.name];
+						delete chatHistory[room.name];
 						var i= 0;
 						while(i < sockets.length) {
 							if (_.contains((room.people)), socket.id) {
@@ -187,7 +187,7 @@ io.sockets.on("connection", function (socket) {
 			room.addPerson(socket.id);
 			socket.emit("update", "Welcome to " + room.name + ".");
 			socket.emit("sendRoomID", {id: id});
-			last10messages[socket.room] = [];
+			chatHistory[socket.room] = [];
 		} else {
 			io.sockets.emit("update", "You have already created a room.");
 		}
@@ -221,7 +221,7 @@ io.sockets.on("connection", function (socket) {
 						    ++i;
 						}
 			    			delete rooms[id];
-			    			delete last10messages[room.name];
+			    			delete chatHistory[room.name];
 			    			people[room.owner].owns = null;
 			    			sizeRooms = _.size(rooms);
 						io.sockets.emit("roomList", {rooms: rooms, count: sizeRooms});
@@ -253,9 +253,9 @@ io.sockets.on("connection", function (socket) {
 						io.sockets.in(socket.room).emit("update", user.name + " has connected to " + room.name + " room.");
 						socket.emit("update", "Welcome to " + room.name + ".");
 						socket.emit("sendRoomID", {id: id});
-						var keys = _.keys(last10messages);
+						var keys = _.keys(chatHistory);
 						if (_.contains(keys, socket.room)) {
-							socket.emit("history", last10messages[socket.room]);
+							socket.emit("history", chatHistory[socket.room]);
 						}
 					}
 				}
