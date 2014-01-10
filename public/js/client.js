@@ -194,7 +194,7 @@ $(document).ready(function() {
        if (roomExists) {
           $("#errors").empty();
           $("#errors").show();
-          $("#errors").append("Room" + roomName + " already exists");
+          $("#errors").append("Room <i>" + roomName + "</i> already exists");
         } else {      
         if (roomName.length > 0) { //also check for roomname
           socket.emit("createRoom", roomName);
