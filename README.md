@@ -27,10 +27,15 @@
 ## Setup and configuration
 
 Make sure that you update <strong>server.js</strong>:
-<pre>server.listen(3000, "192.168.56.102",  function(){
-  console.log("Express server up and running.");
+<pre>server.listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('port'));
 });</pre>
-and add your own IP address/hostname.
+and add your own IP address/hostname if required, i.e.:
+<pre>server.listen(app.get('port'), "192.168.56.102", function(){
+  console.log('Express server listening on port ' + app.get('port'));
+});</pre>
+
+(the port is defined in the <code>app.set('port', process.env.PORT || 3000);</code> section.)
 
 Please also update <strong>public/js/client.js</strong>:
 <pre>var socket = io.connect("192.168.56.102:3000");</pre>
