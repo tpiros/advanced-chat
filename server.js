@@ -64,14 +64,7 @@ function purge(s, action) {
 		3) leaves the room
 			- n/a
 	*/
-	if (people[s.id].inroom === null) { //user is not in a room and therefore does not own a room
-		io.sockets.emit("update", people[s.id].name + " has left the server.");
-		var o = _.findWhere(sockets, {'id': s.id});
-		sockets = _.without(sockets, o);
-		delete people[s.id];
-		sizePeople = _.size(people);
-		io.sockets.emit("update-people", {people: people, count: sizePeople});
-	} else { //user is in a room
+	if (people[s.id].inroom) { //user is in a room
 		var room = rooms[people[s.id].inroom]; //check which room user is in.
 		if (s.id === room.owner) { //user in room and owns room
 			if (action === "disconnect") {
@@ -270,7 +263,9 @@ io.sockets.on("connection", function (socket) {
 
 	//Room functions
 	socket.on("createRoom", function(name) {
-		if (people[socket.id].owns === null) {
+		if (people[socket.id].inroom) {
+			socket.emit("update", "You are in a room. Please leave it first to create your own.");
+		} else if (!people[socket.id].owns) {
 			var id = uuid.v4();
 			var room = new Room(name, id, socket.id);
 			rooms[id] = room;
@@ -286,7 +281,7 @@ io.sockets.on("connection", function (socket) {
 			socket.emit("sendRoomID", {id: id});
 			chatHistory[socket.room] = [];
 		} else {
-			io.sockets.emit("update", "You have already created a room.");
+			socket.emit("update", "You have already created a room.");
 		}
 	});
 
@@ -341,6 +336,8 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("leaveRoom", function(id) {
-		purge(socket, "leaveRoom");
+		var room = rooms[id];
+		if (room)
+			purge(socket, "leaveRoom");
 	});
 });
