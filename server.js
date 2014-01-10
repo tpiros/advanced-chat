@@ -34,7 +34,6 @@ var sockets = [];
 var chatHistory = {};
 
 function purge(s, action) {
-	//console.log(sockets);
 	/*
 	The action will determine how we deal with the room/user removal.
 	These are the following scenarios:
@@ -220,7 +219,6 @@ io.sockets.on("connection", function (socket) {
 	});
 	
 	socket.on("send", function(msg) {
-		console.log(io.sockets.manager.roomClients[socket.id]);
 		//process.exit(1);
 		var re = /^[w]:.*:/;
 		var whisper = re.test(msg);
