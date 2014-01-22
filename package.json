@@ -10,12 +10,16 @@
     "nodemon": "~1.0.13",
     "socket.io": "~0.9.16",
     "shrinkwrap": "~0.0.3",
-    "underscore": "~1.5.2"
+    "underscore": "~1.5.2",
+    "bower": "~1.2.8"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
+  },
+  "scripts": {
+    "postinstall": "./node_modules/bower/bin/bower install"
   },
   "repository": {
     "type": "git",
