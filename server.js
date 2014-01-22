@@ -161,6 +161,18 @@ function purge(s, action) {
 			}
 		}	
 	}
+	else
+	{
+		//The user isn't in a room, but maybe he just disconnected, handle the scenario:
+			if (action === "disconnect") {
+				io.sockets.emit("update", people[s.id].name + " has disconnected from the server.");
+				delete people[s.id];
+				sizePeople = _.size(people);
+				io.sockets.emit("update-people", {people: people, count: sizePeople});
+				var o = _.findWhere(sockets, {'id': s.id});
+				sockets = _.without(sockets, o);
+			}		
+	}
 }
 
 io.sockets.on("connection", function (socket) {
