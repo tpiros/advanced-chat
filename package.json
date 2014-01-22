@@ -1,21 +1,32 @@
 {
-  "name": "chat-20",
-  "description": "",
-  "version": "0.0.1",
-  "author": {
-    "name": "Tamas Piros",
-    "email": "tamas@tamaspiros.co.uk",
-    "web": "http://tamaspiros.co.uk"
-  },
-  "scripts": {
-    "start": "NODE_PATH=./app/controllers NODE_ENV=development ./node_modules/.bin/nodemon server.js"
-  },
+  "name": "chat",
+  "version": "0.0.0",
+  "description": "node.js/socket.io chat app",
+  "main": "server.js",
   "dependencies": {
-    "express": "latest",
-    "node-uuid": "latest",
-    "socket.io": "latest",
-    "nodemon": "latest",
-    "underscore": "latest",
-    "ejs": "latest"
-  }
+    "ejs": "~0.8.5",
+    "express": "~3.4.8",
+    "node-uuid": "~1.4.1",
+    "nodemon": "~1.0.13",
+    "socket.io": "~0.9.16",
+    "shrinkwrap": "~0.0.3",
+    "underscore": "~1.5.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tamaspiros/advanced-chat.git"
+  },
+  "author": "Tamas Piros",
+  "url": "http://tamas.io",
+  "email": "me@tamas.io",
+  "license": "free",
+  "bugs": {
+    "url": "https://github.com/tamaspiros/advanced-chat/issues"
+  },
+  "homepage": "https://github.com/tamaspiros/advanced-chat"
 }
