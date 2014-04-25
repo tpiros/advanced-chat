@@ -1,11 +1,20 @@
 {
-    "name":  "chat-20",
-    "version": "0.0.1",
-    "dependencies": {
-        "bootstrap": "latest",
-        "jquery": "latest",
-        "typeahead.js": "latest",
-        "font-awesome": "latest"
-    },
-    "directory": "components"
+  "name": "chat-20",
+  "version": "0.0.1",
+  "dependencies": {
+    "bootstrap": "latest",
+    "jquery": "latest",
+    "typeahead.js": "latest",
+    "font-awesome": "latest"
+  },
+  "directory": "components",
+  "homepage": "https://github.com/tamaspiros/advanced-chat",
+  "authors": [
+    "Tamas Piros <me@tamas.io>"
+  ],
+  "main": "server.js",
+  "moduleType": [
+    "node"
+  ],
+  "license": "free"
 }

@@ -1,6 +1,6 @@
 {
   "name": "chat",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "node.js/socket.io chat app",
   "main": "server.js",
   "dependencies": {
@@ -15,11 +15,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "./node_modules/bower/bin/bower install",
     "start": "node server.js"
-  },
-  "scripts": {
-    "postinstall": "./node_modules/bower/bin/bower install"
   },
   "repository": {
     "type": "git",
