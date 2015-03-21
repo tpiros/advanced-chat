@@ -2,6 +2,7 @@ var express = require('express')
 , app = express()
 , server = require('http').createServer(app)
 , io = require("socket.io").listen(server)
+, npid = require("npid")
 , uuid = require('node-uuid')
 , Room = require('./room.js')
 , _ = require('underscore')._;
@@ -22,6 +23,14 @@ app.configure(function() {
 app.get('/', function(req, res) {
   res.render('index.html');
 });
+
+/* Store process-id (as priviledged user) */
+try {
+    npid.create('/var/run/advanced-chat.pid', true);
+} catch (err) {
+    console.log(err);
+    process.exit(1);
+}
 
 server.listen(app.get('port'), app.get('ipaddr'), function(){
 	console.log('Express server listening on  IP: ' + app.get('ipaddr') + ' and port ' + app.get('port'));

@@ -8,6 +8,7 @@
     "express": "~3.4.8",
     "node-uuid": "~1.4.1",
     "nodemon": "~1.0.13",
+    "npid": "*",
     "socket.io": "~0.9.16",
     "shrinkwrap": "~0.0.3",
     "underscore": "~1.5.2",
