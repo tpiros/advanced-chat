@@ -37,19 +37,11 @@ Room.prototype.getPerson = function(personID) {
 };
 
 Room.prototype.isAvailable = function() {
-  if (this.available === "available") {
-    return true;
-  } else {
-    return false;
-  }
+  return this.available === "available";
 };
 
 Room.prototype.isPrivate = function() {
-  if (this.private) {
-    return true;
-  } else {
-    return false;
-  }
+  return this.private;
 };
 
 module.exports = Room;
