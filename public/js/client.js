@@ -63,6 +63,22 @@ function toggleChatWindow() {
   $("#main-chat-screen").toggle();
 }
 
+// Pad n to specified size by prepending a zeros
+function zeroPad(num, size) {
+  var s = num + "";
+  while (s.length < size)
+    s = "0" + s;
+  return s;
+}
+
+// Format the time specified in ms from 1970 into local HH:MM:SS
+function timeFormat(msTime) {
+  var d = new Date(msTime);
+  return zeroPad(d.getHours(), 2) + ":" +
+    zeroPad(d.getMinutes(), 2) + ":" +
+    zeroPad(d.getSeconds(), 2) + " ";
+}
+
 $(document).ready(function() {
   //setup "global" variables first
   var socket = io.connect("127.0.0.1:3000");
@@ -121,7 +137,7 @@ $(document).ready(function() {
   $("#chatForm").submit(function() {
     var msg = $("#msg").val();
     if (msg !== "") {
-      socket.emit("send", msg);
+      socket.emit("send", new Date().getTime(), msg);
       $("#msg").val("");
     }
   });
@@ -354,21 +370,21 @@ socket.on("history", function(data) {
     }*/
   });
 
-  socket.on("chat", function(person, msg) {
-    $("#msgs").append("<li><strong><span class='text-success'>" + person.name + "</span></strong>: " + msg + "</li>");
+  socket.on("chat", function(msTime, person, msg) {
+    $("#msgs").append("<li><strong><span class='text-success'>" + timeFormat(msTime) + person.name + "</span></strong>: " + msg + "</li>");
     //clear typing field
      $("#"+person.name+"").remove();
      clearTimeout(timeout);
      timeout = setTimeout(timeoutFunction, 0);
   });
 
-  socket.on("whisper", function(person, msg) {
+  socket.on("whisper", function(msTime, person, msg) {
     if (person.name === "You") {
       s = "whisper"
     } else {
       s = "whispers"
     }
-    $("#msgs").append("<li><strong><span class='text-muted'>" + person.name + "</span></strong> "+s+": " + msg + "</li>");
+    $("#msgs").append("<li><strong><span class='text-muted'>" + timeFormat(msTime) + person.name + "</span></strong> "+s+": " + msg + "</li>");
   });
 
   socket.on("roomList", function(data) {

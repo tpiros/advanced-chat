@@ -2,6 +2,7 @@ var express = require('express')
 , app = express()
 , server = require('http').createServer(app)
 , io = require("socket.io").listen(server)
+, npid = require("npid")
 , uuid = require('node-uuid')
 , Room = require('./room.js')
 , _ = require('underscore')._;
@@ -17,6 +18,15 @@ app.configure(function() {
 	app.use('/icons', express.static(__dirname + '/icons'));
 	app.set('views', __dirname + '/views');
 	app.engine('html', require('ejs').renderFile);
+
+	/* Store process-id (as priviledged user) */
+	try {
+	    npid.create('/var/run/advanced-chat.pid', true);
+	} catch (err) {
+	    console.log(err);
+	    process.exit(1);
+	}
+
 });
 
 app.get('/', function(req, res) {
@@ -221,7 +231,7 @@ io.sockets.on("connection", function (socket) {
 			io.sockets.in(socket.room).emit("isTyping", {isTyping: data, person: people[socket.id].name});
 	});
 	
-	socket.on("send", function(msg) {
+	socket.on("send", function(msTime, msg) {
 		//process.exit(1);
 		var re = /^[w]:.*:/;
 		var whisper = re.test(msg);
@@ -246,13 +256,13 @@ io.sockets.on("connection", function (socket) {
 				var whisperTo = whisperStr[1];
 				var whisperMsg = whisperStr[2];
 				socket.emit("whisper", {name: "You"}, whisperMsg);
-				io.sockets.socket(whisperId).emit("whisper", people[socket.id], whisperMsg);
+				io.sockets.socket(whisperId).emit("whisper", msTime, people[socket.id], whisperMsg);
 			} else {
 				socket.emit("update", "Can't find " + whisperTo);
 			}
 		} else {
 			if (io.sockets.manager.roomClients[socket.id]['/'+socket.room] !== undefined ) {
-				io.sockets.in(socket.room).emit("chat", people[socket.id], msg);
+				io.sockets.in(socket.room).emit("chat", msTime, people[socket.id], msg);
 				socket.emit("isTyping", false);
 				if (_.size(chatHistory[socket.room]) > 10) {
 					chatHistory[socket.room].splice(0,1);
