@@ -79,6 +79,11 @@
   <script src="components/jquery/dist/jquery.js"></script>
   <script src="components/bootstrap/dist/js/bootstrap.js"></script>
   <script src="/socket.io/socket.io.js"></script>  
+  <script type="text/javascript">
+    //setup "global" variables first
+    var socket = io.connect("127.0.0.1:3000");
+    var myRoomID = null;
+  </script>  
   <script src="js/client.js"></script>
 </body>
 </html>
