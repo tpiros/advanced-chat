@@ -79,11 +79,12 @@ function timeFormat(msTime) {
     zeroPad(d.getSeconds(), 2) + " ";
 }
 
-$(document).ready(function() {
-  //setup "global" variables first
-  var socket = io.connect("127.0.0.1:3000");
-  var myRoomID = null;
+//setup "global" variables first
+var socket = io.connect("127.0.0.1:3000");
+var myRoomID = null;
 
+$(document).ready(function() {
+  
   $("form").submit(function(event) {
     event.preventDefault();
   });
