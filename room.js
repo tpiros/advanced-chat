@@ -37,7 +37,7 @@ Room.prototype.getPerson = function(personID) {
 };
 
 Room.prototype.isAvailable = function() {
-  return this.available === "available";
+  return this.status === "available";
 };
 
 Room.prototype.isPrivate = function() {
