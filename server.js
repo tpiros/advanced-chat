@@ -24,7 +24,7 @@ app.configure(function() {
 	    npid.create('/var/run/advanced-chat.pid', true);
 	} catch (err) {
 	    console.log(err);
-	    process.exit(1);
+	    //process.exit(1);
 	}
 
 });
