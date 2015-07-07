@@ -380,11 +380,11 @@ socket.on("history", function(data) {
 
   socket.on("whisper", function(msTime, person, msg) {
     if (person.name === "You") {
-      s = "whisper"
+      s = " whisper to " + person.to
     } else {
-      s = "whispers"
+      s = " whispers"
     }
-    $("#msgs").append("<li><strong><span class='text-muted'>" + timeFormat(msTime) + person.name + "</span></strong> "+s+": " + msg + "</li>");
+    $("#msgs").append("<li><strong><span class='text-muted'>" + timeFormat(msTime) + person.name + s + "</span></strong>: " + msg + "</li>");
   });
 
   socket.on("roomList", function(data) {
